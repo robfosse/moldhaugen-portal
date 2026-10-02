@@ -74,6 +74,8 @@ Server actions call `broadcastToolUpdate()` (or equivalent) after every mutation
 - Reads that need cross-user access (e.g. finding an approved request regardless of who owns it): use service client.
 - Never rely on RLS-filtered reads for authorization logic — query explicitly by `user.id`.
 
+**Critical gotcha — missing UPDATE policy silently drops edits**: If a table has RLS enabled but no `FOR UPDATE` policy, Supabase returns no error — it just updates 0 rows. This caused `info_entries` edits to silently vanish. When adding a new table, always define all four policies: `SELECT`, `INSERT`, `UPDATE`, `DELETE`. The UPDATE policy needs both `USING` (which rows are visible for update) and `WITH CHECK` (which values are allowed after update).
+
 **Force-dynamic**: add `export const dynamic = "force-dynamic"` to pages with polling so `router.refresh()` always hits Supabase fresh instead of a cached response.
 
 **Supabase Realtime broadcast via REST**: the `channel.send()` approach from the service client works (returns `ok`) but delivery to subscribed clients is unreliable — use polling as the guaranteed fallback, not as a last resort.
@@ -131,3 +133,4 @@ CREATE POLICY "Admins can manage board members"
 
 - [ ] **Run `supabase/migration_reminders.sql`** in Supabase SQL editor to add `scheduled_time`, `reminder_day_before_sent_at`, `reminder_on_day_sent_at` columns to `maintenance_assignments`.
 - [ ] **Run board_members SQL** above if not already done.
+- [ ] **Run `supabase/migration_info_update_policy.sql`** in Supabase SQL editor to add the missing UPDATE policy on `info_entries` (fixes edits being silently dropped).
