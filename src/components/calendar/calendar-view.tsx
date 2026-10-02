@@ -83,24 +83,27 @@ export function CalendarView({ events, assignments, members, currentUserId }: Pr
     setSelectedDay((prev) => (prev && isSameDay(prev, day) ? null : day))
   }
 
-  const listItems = useMemo<ListItem[]>(() => {
-    if (selectedDay) {
-      return [
-        ...events
-          .filter((e) => isSameDay(parseISO(e.start_time), selectedDay))
-          .map((e) => ({ type: "event" as const, date: parseISO(e.start_time), data: e })),
-        ...assignments
-          .filter((a) => {
-            if (!a.scheduled_date) return false
-            const range = assignmentRanges.find((r) => r.id === a.id)
-            if (!range) return false
-            return isSameDay(range.start, selectedDay) || isWithinInterval(selectedDay, { start: range.start, end: range.end })
-          })
-          .map((a) => ({ type: "assignment" as const, date: parseISO(a.scheduled_date! + "T00:00:00"), data: a })),
-      ].sort((a, b) => a.date.getTime() - b.date.getTime())
-    }
+  const dayItems = useMemo<ListItem[]>(() => {
+    if (!selectedDay) return []
+    return [
+      ...events
+        .filter((e) => isSameDay(parseISO(e.start_time), selectedDay))
+        .map((e) => ({ type: "event" as const, date: parseISO(e.start_time), data: e })),
+      ...assignments
+        .filter((a) => {
+          if (!a.scheduled_date) return false
+          const range = assignmentRanges.find((r) => r.id === a.id)
+          if (!range) return false
+          return isSameDay(range.start, selectedDay) || isWithinInterval(selectedDay, { start: range.start, end: range.end })
+        })
+        .map((a) => ({ type: "assignment" as const, date: parseISO(a.scheduled_date! + "T00:00:00"), data: a })),
+    ].sort((a, b) => a.date.getTime() - b.date.getTime())
+  }, [selectedDay, events, assignments, assignmentRanges])
 
+  const upcomingItems = useMemo<ListItem[]>(() => {
     const now = new Date()
+    // Skip anything already listed under the selected day
+    const shown = new Set(dayItems.map((i) => `${i.type}-${i.data.id}`))
     return [
       ...events
         .filter((e) => new Date(e.end_time) >= now)
@@ -112,8 +115,30 @@ export function CalendarView({ events, assignments, members, currentUserId }: Pr
           date: parseISO(a.scheduled_date! + "T00:00:00"),
           data: a,
         })),
-    ].sort((a, b) => a.date.getTime() - b.date.getTime())
-  }, [selectedDay, events, assignments])
+    ]
+      .filter((i) => !shown.has(`${i.type}-${i.data.id}`))
+      .sort((a, b) => a.date.getTime() - b.date.getTime())
+  }, [dayItems, events, assignments])
+
+  function renderItems(items: ListItem[]) {
+    return (
+      <div className="space-y-3">
+        {items.map((item) =>
+          item.type === "event" ? (
+            <EventCard key={`e-${item.data.id}`} event={item.data} currentUserId={currentUserId} members={members} />
+          ) : (
+            <Link
+              key={`a-${item.data.id}`}
+              href={`/maintenance#${item.data.plan?.id ?? ""}`}
+              className="block hover:opacity-80 transition-opacity"
+            >
+              <AssignmentCalendarCard assignment={item.data} />
+            </Link>
+          )
+        )}
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -195,33 +220,29 @@ export function CalendarView({ events, assignments, members, currentUserId }: Pr
         </span>
       </div>
 
-      {/* Event list */}
+      {/* Selected day */}
+      {selectedDay && (
+        <div>
+          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+            {format(selectedDay, "d. MMMM yyyy", { locale: nb })}
+          </h3>
+          {dayItems.length > 0 ? (
+            renderItems(dayItems)
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-4">Ingen hendelser denne dagen</p>
+          )}
+        </div>
+      )}
+
+      {/* Upcoming */}
       <div>
         <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-          {selectedDay
-            ? format(selectedDay, "d. MMMM yyyy", { locale: nb })
-            : "Kommende"}
+          Kommende
         </h3>
-        {listItems.length > 0 ? (
-          <div className="space-y-3">
-            {listItems.map((item) =>
-              item.type === "event" ? (
-                <EventCard key={`e-${item.data.id}`} event={item.data} currentUserId={currentUserId} members={members} />
-              ) : (
-                <Link
-                  key={`a-${item.data.id}`}
-                  href={`/maintenance#${item.data.plan?.id ?? ""}`}
-                  className="block hover:opacity-80 transition-opacity"
-                >
-                  <AssignmentCalendarCard assignment={item.data} />
-                </Link>
-              )
-            )}
-          </div>
+        {upcomingItems.length > 0 ? (
+          renderItems(upcomingItems)
         ) : (
-          <p className="text-sm text-muted-foreground text-center py-8">
-            {selectedDay ? "Ingen hendelser denne dagen" : "Ingen kommende hendelser"}
-          </p>
+          <p className="text-sm text-muted-foreground text-center py-4">Ingen kommende hendelser</p>
         )}
       </div>
     </div>
