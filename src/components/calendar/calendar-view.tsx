@@ -13,13 +13,14 @@ import { Button } from "@/components/ui/button"
 import { EventCard } from "./event-card"
 import { AssignmentCalendarCard } from "./assignment-calendar-card"
 import { createClient } from "@/lib/supabase/client"
-import type { Event as CalEvent, MaintenanceAssignment } from "@/types"
+import type { Event as CalEvent, MaintenanceAssignment, ProfileSummary } from "@/types"
 
 const WEEKDAYS = ["Man", "Tir", "Ons", "Tor", "Fre", "Lør", "Søn"]
 
 type Props = {
   events: CalEvent[]
   assignments: MaintenanceAssignment[]
+  members: ProfileSummary[]
   currentUserId: string
 }
 
@@ -27,7 +28,7 @@ type ListItem =
   | { type: "event"; date: Date; data: CalEvent }
   | { type: "assignment"; date: Date; data: MaintenanceAssignment }
 
-export function CalendarView({ events, assignments, currentUserId }: Props) {
+export function CalendarView({ events, assignments, members, currentUserId }: Props) {
   const router = useRouter()
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectedDay, setSelectedDay] = useState<Date | null>(new Date())
@@ -205,7 +206,7 @@ export function CalendarView({ events, assignments, currentUserId }: Props) {
           <div className="space-y-3">
             {listItems.map((item) =>
               item.type === "event" ? (
-                <EventCard key={`e-${item.data.id}`} event={item.data} currentUserId={currentUserId} />
+                <EventCard key={`e-${item.data.id}`} event={item.data} currentUserId={currentUserId} members={members} />
               ) : (
                 <Link
                   key={`a-${item.data.id}`}

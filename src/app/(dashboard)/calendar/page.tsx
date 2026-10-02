@@ -48,7 +48,7 @@ export default async function CalendarPage() {
         <EventForm members={members} currentUserId={user.id} />
       </div>
 
-      <CalendarView events={events} assignments={assignments} currentUserId={user.id} />
+      <CalendarView events={events} assignments={assignments} members={members} currentUserId={user.id} />
     </div>
   )
 }

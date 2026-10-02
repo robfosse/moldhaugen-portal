@@ -84,6 +84,62 @@ export async function createEvent(formData: FormData) {
   return { success: true }
 }
 
+export async function updateEvent(id: string, formData: FormData) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: "Not authenticated" }
+
+  const title = formData.get("title") as string
+  const description = formData.get("description") as string
+  const location = formData.get("location") as string
+  const start_time = formData.get("start_time") as string
+  const end_time = formData.get("end_time") as string
+  const is_public = formData.get("is_public") === "true"
+  const invited = formData.getAll("invited") as string[]
+
+  if (!title?.trim()) return { error: "Tittel mangler" }
+  if (new Date(end_time) < new Date(start_time)) return { error: "Slutt kan ikke være før start" }
+
+  const { data: updated, error } = await supabase
+    .from("events")
+    .update({
+      title,
+      description: description || null,
+      location: location || null,
+      start_time,
+      end_time,
+      is_public,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .eq("created_by", user.id)
+    .select("id")
+
+  if (error) return { error: error.message }
+  if (!updated || updated.length === 0) return { error: "Kunne ikke lagre – du kan bare redigere egne hendelser" }
+
+  // Sync invitations for private events (public events keep any existing invitations, e.g. tool loans)
+  if (!is_public) {
+    const { data: existing } = await supabase
+      .from("event_invitations")
+      .select("user_id")
+      .eq("event_id", id)
+    const existingIds = (existing ?? []).map((i) => i.user_id as string)
+    const toRemove = existingIds.filter((uid) => !invited.includes(uid))
+    const toAdd = invited.filter((uid) => !existingIds.includes(uid))
+    if (toRemove.length > 0) {
+      await supabase.from("event_invitations").delete().eq("event_id", id).in("user_id", toRemove)
+    }
+    if (toAdd.length > 0) {
+      await supabase.from("event_invitations").insert(toAdd.map((uid) => ({ event_id: id, user_id: uid })))
+    }
+  }
+
+  revalidatePath("/calendar")
+  await broadcastCalendarUpdate()
+  return { success: true }
+}
+
 export async function deleteEvent(id: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

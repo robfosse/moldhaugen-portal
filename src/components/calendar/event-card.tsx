@@ -5,14 +5,15 @@ import { deleteEvent } from "@/app/(dashboard)/calendar/actions"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { CalendarDays, Clock, MapPin, Trash2, Users, Lock } from "lucide-react"
-import type { Event } from "@/types"
+import { CalendarDays, Clock, MapPin, Pencil, Trash2, Users, Lock } from "lucide-react"
+import { EventForm } from "./event-form"
+import type { Event, ProfileSummary } from "@/types"
 import { format } from "date-fns"
 import { nb } from "date-fns/locale"
 
-type Props = { event: Event; currentUserId: string }
+type Props = { event: Event; currentUserId: string; members: ProfileSummary[] }
 
-export function EventCard({ event, currentUserId }: Props) {
+export function EventCard({ event, currentUserId, members }: Props) {
   const [loading, setLoading] = useState(false)
   const isOwner = event.created_by === currentUserId
 
@@ -87,15 +88,33 @@ export function EventCard({ event, currentUserId }: Props) {
             )}
           </div>
           {isOwner && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
-              onClick={handleDelete}
-              disabled={loading}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            <div className="flex shrink-0 gap-1">
+              <EventForm
+                event={event}
+                members={members}
+                currentUserId={currentUserId}
+                trigger={
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                    aria-label="Rediger hendelse"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                }
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                onClick={handleDelete}
+                disabled={loading}
+                aria-label="Slett hendelse"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
           )}
         </div>
       </CardContent>
