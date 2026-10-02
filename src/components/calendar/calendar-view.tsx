@@ -221,16 +221,12 @@ export function CalendarView({ events, assignments, members, currentUserId }: Pr
       </div>
 
       {/* Selected day */}
-      {selectedDay && (
+      {selectedDay && dayItems.length > 0 && (
         <div>
           <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
             {format(selectedDay, "d. MMMM yyyy", { locale: nb })}
           </h3>
-          {dayItems.length > 0 ? (
-            renderItems(dayItems)
-          ) : (
-            <p className="text-sm text-muted-foreground text-center py-4">Ingen hendelser denne dagen</p>
-          )}
+          {renderItems(dayItems)}
         </div>
       )}
 
