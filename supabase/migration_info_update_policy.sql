@@ -1,4 +1,5 @@
 -- Fix: missing UPDATE policy on info_entries caused all edits to be silently dropped by RLS
+DROP POLICY IF EXISTS "Creator or admin can update info entries" ON public.info_entries;
 CREATE POLICY "Creator or admin can update info entries"
   ON public.info_entries FOR UPDATE
   USING (

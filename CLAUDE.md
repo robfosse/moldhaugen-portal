@@ -133,4 +133,4 @@ CREATE POLICY "Admins can manage board members"
 
 - [ ] **Run `supabase/migration_reminders.sql`** in Supabase SQL editor to add `scheduled_time`, `reminder_day_before_sent_at`, `reminder_on_day_sent_at` columns to `maintenance_assignments`.
 - [ ] **Run board_members SQL** above if not already done.
-- [ ] **Run `supabase/migration_info_update_policy.sql`** in Supabase SQL editor to add the missing UPDATE policy on `info_entries` (fixes edits being silently dropped).
+- [x] **Run `supabase/migration_info_update_policy.sql`** in Supabase SQL editor to add the missing UPDATE policy on `info_entries` (fixes edits being silently dropped).
