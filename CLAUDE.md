@@ -99,7 +99,7 @@ Pages with live updates (polling + broadcast, `force-dynamic`):
 - `/calendar` — channel `"calendar"`
 
 Pages without live updates (manual refresh only):
-- `/info`, `/maintenance`, `/oppslagstavle`, `/beboere`, `/admin`
+- `/info` (includes Beboere list; `/beboere` redirects here), `/maintenance`, `/oppslagstavle`, `/admin`
 
 ## Styret (board members) — `/info` page
 

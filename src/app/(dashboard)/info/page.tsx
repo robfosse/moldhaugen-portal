@@ -3,6 +3,7 @@ import { redirect } from "next/navigation"
 import { InfoForm } from "@/components/info/info-form"
 import { InfoCard } from "@/components/info/info-card"
 import { StyretCard } from "@/components/info/styret-card"
+import { BeboereCard } from "@/components/info/beboere-card"
 import { BookOpen } from "lucide-react"
 import type { BoardMember, ProfileSummary } from "@/types"
 
@@ -18,7 +19,7 @@ export default async function InfoPage() {
     supabase.from("info_entries").select("*, creator:profiles!info_entries_created_by_fkey(id, full_name, email)").order("category").order("created_at", { ascending: false }),
     supabase.from("profiles").select("is_admin").eq("id", user.id).single(),
     supabase.from("board_members").select("id, user_id, role, created_at, profile:profiles(id, full_name, email, phone_number, unit_number)").order("created_at", { ascending: true }),
-    supabase.from("profiles").select("id, full_name, email, unit_number").eq("is_approved", true).order("full_name"),
+    supabase.from("profiles").select("id, full_name, email, phone_number, unit_number, avatar_url").eq("is_approved", true).order("full_name"),
   ])
 
   const grouped: Record<string, typeof entries> = {}
@@ -54,6 +55,10 @@ export default async function InfoPage() {
           residents={(residents ?? []) as ProfileSummary[]}
           isAdmin={!!profile?.is_admin}
         />
+      </div>
+
+      <div className="mb-8">
+        <BeboereCard residents={residents ?? []} />
       </div>
 
       {totalCount > 0 ? (

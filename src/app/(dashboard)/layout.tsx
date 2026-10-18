@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
-import { CalendarDays, Wrench, Home, LogOut, ShieldCheck, BookOpen, Pin, Users, Hammer } from "lucide-react"
+import { CalendarDays, Wrench, Home, LogOut, ShieldCheck, BookOpen, Pin, Hammer } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
 import { logout } from "@/app/(auth)/actions"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -11,10 +11,10 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { PushInit } from "@/components/push/push-init"
 
 const navItems = [
+  { href: "/oppslagstavle", label: "Oppslag", icon: Pin },
   { href: "/calendar", label: "Kalender", icon: CalendarDays },
   { href: "/maintenance", label: "Vedlikehold", icon: Wrench },
   { href: "/verktoy", label: "Verktøy", icon: Hammer },
-  { href: "/beboere", label: "Beboere", icon: Users },
   { href: "/info", label: "Nyttig info", icon: BookOpen },
 ]
 
